@@ -7,12 +7,12 @@
         <PORT ID="portY" TYPE="IN" />
         <PORT ID="portS" TYPE="OUT" />
         <PORT ID="portC" TYPE="OUT" />
-        <WIRE FROM="portX" TO="xor1$IN#0" />
-        <WIRE FROM="portY" TO="xor1$IN#1" />
-        <WIRE FROM="portX" TO="and1$IN#0" />
-        <WIRE FROM="portY" TO="and1$IN#1" />
-        <WIRE FROM="xor1$OUT#0" TO="portS" />
-        <WIRE FROM="and1$OUT#0" TO="portC" />
+        <WIRE FROM="portX" TO="xor1$in0" />
+        <WIRE FROM="portY" TO="xor1$in1" />
+        <WIRE FROM="portX" TO="and1$in0" />
+        <WIRE FROM="portY" TO="and1$in1" />
+        <WIRE FROM="xor1$out0" TO="portS" />
+        <WIRE FROM="and1$out0" TO="portC" />
     </IC>
 
     <IC id="ic2">
@@ -21,10 +21,10 @@
         <PORT ID="portY" TYPE="IN" />
         <PORT ID="portS" TYPE="OUT" />
         <PORT ID="portC" TYPE="OUT" />
-        <WIRE FROM="portX" TO="gate1$IN#0" />
-        <WIRE FROM="portY" TO="gate1$IN#1" />
-        <WIRE FROM="gate1$OUT#0" TO="portS" />
-        <WIRE FROM="gate1$OUT#1" TO="portC" />
+        <WIRE FROM="portX" TO="gate1$portX" />
+        <WIRE FROM="portY" TO="gate1$portY" />
+        <WIRE FROM="gate1$portS" TO="portS" />
+        <WIRE FROM="gate1$portC" TO="portC" />
     </IC>
     
     <GATE id="out1" type="OUTPUT" />
@@ -32,9 +32,9 @@
     <GATE id="gate1" type="ic2" />
     <GATE id="in1" type="INPUT" />
     <GATE id="in2" type="INPUT" />
-    <WIRE FROM="out1$OUT#0" TO="gate1$IN#0" />
-    <WIRE FROM="out2$OUT#0" TO="gate1$IN#1" />
-    <WIRE FROM="gate1$OUT#0" TO="in1$IN#0" />
-    <WIRE FROM="gate1$OUT#1" TO="in2$IN#0" />
+    <WIRE FROM="out1$out0" TO="gate1$portX" />
+    <WIRE FROM="out2$out0" TO="gate1$portY" />
+    <WIRE FROM="gate1$portS" TO="in1$in0" />
+    <WIRE FROM="gate1$portC" TO="in2$in0" />
 
 </CIRCUIT>

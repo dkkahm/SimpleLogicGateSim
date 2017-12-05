@@ -268,7 +268,8 @@ namespace SimpleLogicGateSim
 #if true
             // string cwd = Directory.GetCurrentDirectory();
             // System.Console.WriteLine(cwd);
-            string text = System.IO.File.ReadAllText(@"..\..\..\ic\circuit2.xml");
+            // string text = System.IO.File.ReadAllText(@"..\..\..\ic\circuit2.xml");
+            string text = System.IO.File.ReadAllText(@"..\..\..\ic\circuit3.xml");
             Circuit circuit1 = Circuit.ReadXML(text);
 
             List<Gate> gate_list = circuit1.GetGateList();

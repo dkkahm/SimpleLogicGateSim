@@ -150,6 +150,7 @@ namespace SimpleLogicGateSim
         private bool m_got_state_changed_port = false;
         public string m_name;
         public int m_hash_code = -1;
+        protected Dictionary<String, Port> m_port_map;
 
         abstract public void RunLogic();
 
@@ -321,12 +322,27 @@ namespace SimpleLogicGateSim
         }
 
         public abstract Gate Clone();
+
+        public Port FindPortById(string id)
+        {
+            if(m_port_map != null)
+            {
+                if(m_port_map.ContainsKey(id))
+                {
+                    return m_port_map[id];
+                }
+            }
+
+            return null;
+        }
     }
 
     abstract class BinaryBaseGate : Gate
     {
         public BinaryBaseGate()
         {
+            m_port_map = new Dictionary<string, Port>();
+
             Port port;
 
             this.BlockBaking();
@@ -334,14 +350,17 @@ namespace SimpleLogicGateSim
             port = new Port(true);
             m_port_list.Add(port);
             port.SetGate(this);
+            m_port_map.Add("in0", port);
 
             port = new Port(true);
             m_port_list.Add(port);
             port.SetGate(this);
+            m_port_map.Add("in1", port);
 
             port = new Port(false);
             m_port_list.Add(port);
             port.SetGate(this);
+            m_port_map.Add("out0", port);
 
             this.UnlockBaking();
             this.Bake();
@@ -437,6 +456,8 @@ namespace SimpleLogicGateSim
     {
         public BufferGate()
         {
+            m_port_map = new Dictionary<string, Port>();
+
             Port port;
 
             this.BlockBaking();
@@ -444,10 +465,12 @@ namespace SimpleLogicGateSim
             port = new Port(true);
             m_port_list.Add(port);
             port.SetGate(this);
+            m_port_map.Add("in0", port);
 
             port = new Port(false);
             m_port_list.Add(port);
             port.SetGate(this);
+            m_port_map.Add("out0", port);
 
             this.UnlockBaking();
             this.Bake();
@@ -489,11 +512,14 @@ namespace SimpleLogicGateSim
     {
         public OutputOnlyGate()
         {
+            m_port_map = new Dictionary<string, Port>();
+
             Port port;
 
             port = new Port(false);
             m_port_list.Add(port);
             port.SetGate(this);
+            m_port_map.Add("out0", port);
         }
 
         public override void RunLogic()
@@ -547,11 +573,14 @@ namespace SimpleLogicGateSim
     {
         public InputOnlyGate()
         {
+            m_port_map = new Dictionary<string, Port>();
+
             Port port;
 
             port = new Port(true);
             m_port_list.Add(port);
             port.SetGate(this);
+            m_port_map.Add("in0", port);
         }
 
         public override void RunLogic()
@@ -611,10 +640,11 @@ namespace SimpleLogicGateSim
     {
         private List<Gate> m_gate_list;
 
-        public IC(List<Gate> gate_list, List<Port> port_list)
+        public IC(List<Gate> gate_list, List<Port> port_list, Dictionary<String, Port> port_map = null)
         {
             m_gate_list = gate_list;
             m_port_list = port_list;
+            m_port_map = port_map;
 
             this.BlockBaking();
 
@@ -684,7 +714,15 @@ namespace SimpleLogicGateSim
                 clone_port_list.Add(clone_port);
             }
 
-            foreach(Port from_port in m_input_port_list)
+            Dictionary<string, Port> clone_port_map = new Dictionary<string, Port>();
+            foreach(var kv in m_port_map)
+            {
+                Port port = kv.Value;
+                int port_index = m_port_list.IndexOf(port);
+                clone_port_map.Add(kv.Key, clone_port_list[port_index]);
+            }
+
+            foreach (Port from_port in m_input_port_list)
             {
                 int from_port_index = m_input_port_list.IndexOf(from_port);
                 foreach (Port to_port in from_port.GetLinkedPortList())
@@ -733,7 +771,7 @@ namespace SimpleLogicGateSim
                 }
             }
 
-            return new IC(clone_gate_list, clone_port_list);
+            return new IC(clone_gate_list, clone_port_list, clone_port_map);
         }
     }
 
@@ -1078,14 +1116,16 @@ namespace SimpleLogicGateSim
                                         string from_id = null;
                                         bool port_on_from_gate_is_input = false;
                                         int port_on_from_gate_index = -1;
+                                        string port_on_from_gate_id = null;
 
                                         bool to_is_port = false;
                                         string to_id = null;
                                         bool port_on_to_gate_is_input = false;
                                         int port_on_to_gate_index = -1;
+                                        string port_on_to_gate_id = null;
 
-                                        bool from_parsed = ParseWireConnection(from_string, out from_is_port, out from_id, out port_on_from_gate_is_input, out port_on_from_gate_index);
-                                        bool to_parsed = ParseWireConnection(to_string, out to_is_port, out to_id, out port_on_to_gate_is_input, out port_on_to_gate_index);
+                                        bool from_parsed = ParseWireConnection(from_string, out from_is_port, out from_id, out port_on_from_gate_is_input, out port_on_from_gate_index, out port_on_from_gate_id);
+                                        bool to_parsed = ParseWireConnection(to_string, out to_is_port, out to_id, out port_on_to_gate_is_input, out port_on_to_gate_index, out port_on_to_gate_id);
 
                                         if (!from_parsed || !to_parsed)
                                         {
@@ -1133,13 +1173,20 @@ namespace SimpleLogicGateSim
 
                                                 if (from_gate != null)
                                                 {
-                                                    if (port_on_from_gate_is_input)
+                                                    if (port_on_from_gate_index < 0)
                                                     {
-                                                        from_port = from_gate.GetInputPort(port_on_from_gate_index);
+                                                        from_port = from_gate.FindPortById(port_on_from_gate_id);
                                                     }
                                                     else
                                                     {
-                                                        from_port = from_gate.GetOutputPort(port_on_from_gate_index);
+                                                        if (port_on_from_gate_is_input)
+                                                        {
+                                                            from_port = from_gate.GetInputPort(port_on_from_gate_index);
+                                                        }
+                                                        else
+                                                        {
+                                                            from_port = from_gate.GetOutputPort(port_on_from_gate_index);
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1171,13 +1218,20 @@ namespace SimpleLogicGateSim
 
                                                 if (to_gate != null)
                                                 {
-                                                    if (port_on_to_gate_is_input)
+                                                    if (port_on_to_gate_index < 0)
                                                     {
-                                                        to_port = to_gate.GetInputPort(port_on_to_gate_index);
+                                                        to_port = to_gate.FindPortById(port_on_to_gate_id);
                                                     }
                                                     else
                                                     {
-                                                        to_port = to_gate.GetOutputPort(port_on_to_gate_index);
+                                                        if (port_on_to_gate_is_input)
+                                                        {
+                                                            to_port = to_gate.GetInputPort(port_on_to_gate_index);
+                                                        }
+                                                        else
+                                                        {
+                                                            to_port = to_gate.GetOutputPort(port_on_to_gate_index);
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1211,7 +1265,7 @@ namespace SimpleLogicGateSim
                             {
                                 in_ic = false;
 
-                                IC ic = new IC(ic_gate_list, ic_port_list);
+                                IC ic = new IC(ic_gate_list, ic_port_list, ic_port_map);
                                 if (ic_name != null)
                                 {
                                     ic.SetName(ic_name);
@@ -1317,13 +1371,14 @@ namespace SimpleLogicGateSim
             return parsed;
         }
 
-        protected static bool ParseWireConnection(string s, out bool is_port, out string id, out bool port_on_gate_is_input, out int port_on_gate_index)
+        protected static bool ParseWireConnection(string s, out bool is_port, out string id, out bool port_on_gate_is_input, out int port_on_gate_index, out string port_on_gate_id)
         {
             bool parsed = false;
             is_port = false;
             id = null;
             port_on_gate_is_input = false;
             port_on_gate_index = -1;
+            port_on_gate_id = null;
 
             int first_break_index = -1;
             int second_break_index = -1;
@@ -1331,7 +1386,7 @@ namespace SimpleLogicGateSim
             first_break_index = s.IndexOf('$');
             second_break_index = s.IndexOf('#');
 
-            if (first_break_index < 0 && second_break_index < 0)
+            if (first_break_index < 0)
             {
                 // Port
                 if (s.Length > 0)
@@ -1341,18 +1396,30 @@ namespace SimpleLogicGateSim
                     id = s;
                 }
             }
-            else if (first_break_index >= 0 && second_break_index >= 0)
+            else
             {
                 // Gate
                 id = s.Substring(0, first_break_index);
                 if (id.Length > 0)
                 {
-                    string port_on_gate_direction = s.Substring(first_break_index + 1, second_break_index - first_break_index - 1);
-                    string part_on_gate_index_string = s.Substring(second_break_index + 1);
-
-                    if (ParsePortDirection(port_on_gate_direction, out port_on_gate_is_input))
+                    if(second_break_index > 0)
                     {
-                        if (Int32.TryParse(part_on_gate_index_string, out port_on_gate_index))
+                        string port_on_gate_direction = s.Substring(first_break_index + 1, second_break_index - first_break_index - 1);
+                        string part_on_gate_index_string = s.Substring(second_break_index + 1);
+
+                        if (ParsePortDirection(port_on_gate_direction, out port_on_gate_is_input))
+                        {
+                            if (Int32.TryParse(part_on_gate_index_string, out port_on_gate_index))
+                            {
+                                parsed = true;
+                                is_port = false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        port_on_gate_id = s.Substring(first_break_index + 1);
+                        if (port_on_gate_id.Length > 0)
                         {
                             parsed = true;
                             is_port = false;
