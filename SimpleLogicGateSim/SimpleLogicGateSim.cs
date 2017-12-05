@@ -13,6 +13,7 @@ namespace SimpleLogicGateSim
         public Port(bool is_input)
         {
             m_is_input = is_input;
+            m_hash_code = GetHashCode();
         }
 
         public bool m_is_input = false;
@@ -21,6 +22,7 @@ namespace SimpleLogicGateSim
         public Gate m_gate;
         public bool m_is_state_set = false;
         public string m_name;
+        public int m_hash_code = -1;
 
         public void SetInput(bool is_input)
         {
@@ -147,8 +149,14 @@ namespace SimpleLogicGateSim
         protected bool m_do_bake = true;
         private bool m_got_state_changed_port = false;
         public string m_name;
+        public int m_hash_code = -1;
 
         abstract public void RunLogic();
+
+        public Gate()
+        {
+            m_hash_code = GetHashCode();
+        }
 
         public Port GetPort(int index)
         {
@@ -180,6 +188,16 @@ namespace SimpleLogicGateSim
             return null;
         }
 
+        public List<Port> GetInputPortList()
+        {
+            return m_input_port_list;
+        }
+
+        public List<Port> GetOutputPortList()
+        {
+            return m_output_port_list;
+        }
+
         public void OnPortDetached(Port port)
         {
             Bake();
@@ -205,14 +223,19 @@ namespace SimpleLogicGateSim
 
         }
 
-        public int GetInputPortCount()
+        public int GetIndexOfPort(Port port)
         {
-            return m_input_port_list.Count;
+            return m_port_list.IndexOf(port);
         }
 
-        public int GetOutputPortCount()
+        public int GetIndexOfInputPort(Port port)
         {
-            return m_output_port_list.Count;
+            return m_input_port_list.IndexOf(port);
+        }
+
+        public int GetIndexOfOutputPort(Port port)
+        {
+            return m_output_port_list.IndexOf(port);
         }
 
         public void BlockBaking()
@@ -323,18 +346,6 @@ namespace SimpleLogicGateSim
             this.UnlockBaking();
             this.Bake();
         }
-
-        protected virtual List<Port> ClonePorts()
-        {
-            List<Port> clone_port_list = new List<Port>();
-
-            foreach(Port port in m_port_list)
-            {
-                Port clone_port = port.Clone();
-                clone_port_list.Add(clone_port);
-            }
-            return clone_port_list;
-        }
     }
 
     class AndGate : BinaryBaseGate
@@ -362,6 +373,13 @@ namespace SimpleLogicGateSim
 
             m_port_list[2].SetState(ret);
         }
+
+        public override Gate Clone()
+        {
+            Gate clone_gate = new OrGate();
+
+            return clone_gate;
+        }
     }
 
     class XorGate : BinaryBaseGate
@@ -371,6 +389,13 @@ namespace SimpleLogicGateSim
             bool ret = m_port_list[0].GetState() ^ m_port_list[1].GetState();
 
             m_port_list[2].SetState(ret);
+        }
+
+        public override Gate Clone()
+        {
+            Gate clone_gate = new XorGate();
+
+            return clone_gate;
         }
     }
 
@@ -382,6 +407,13 @@ namespace SimpleLogicGateSim
 
             m_port_list[2].SetState(ret);
         }
+
+        public override Gate Clone()
+        {
+            Gate clone_gate = new NandGate();
+
+            return clone_gate;
+        }
     }
 
     class NorGate : BinaryBaseGate
@@ -392,33 +424,12 @@ namespace SimpleLogicGateSim
 
             m_port_list[2].SetState(ret);
         }
-    }
 
-    class NotGate : Gate
-    {
-        public NotGate()
+        public override Gate Clone()
         {
-            Port port;
+            Gate clone_gate = new NorGate();
 
-            this.BlockBaking();
-
-            port = new Port(true);
-            m_port_list.Add(port);
-            port.SetGate(this);
-
-            port = new Port(false);
-            m_port_list.Add(port);
-            port.SetGate(this);
-
-            this.UnlockBaking();
-            this.Bake();
-        }
-
-        public override void RunLogic()
-        {
-            bool ret = !m_port_list[0].GetState();
-
-            m_port_list[1].SetState(ret);
+            return clone_gate;
         }
     }
 
@@ -448,6 +459,30 @@ namespace SimpleLogicGateSim
 
             m_port_list[1].SetState(ret);
         }
+
+        public override Gate Clone()
+        {
+            Gate clone_gate = new BufferGate();
+
+            return clone_gate;
+        }
+    }
+
+    class NotGate : BufferGate
+    {
+        public override void RunLogic()
+        {
+            bool ret = !m_port_list[0].GetState();
+
+            m_port_list[1].SetState(ret);
+        }
+
+        public override Gate Clone()
+        {
+            Gate clone_gate = new NotGate();
+
+            return clone_gate;
+        }
     }
 
     class OutputOnlyGate : Gate
@@ -469,6 +504,13 @@ namespace SimpleLogicGateSim
         {
             return true;
         }
+
+        public override Gate Clone()
+        {
+            Gate clone_gate = new OutputOnlyGate();
+
+            return clone_gate;
+        }
     }
 
     class AlwaysFalseGate : OutputOnlyGate
@@ -477,6 +519,13 @@ namespace SimpleLogicGateSim
         {
             m_port_list[0].SetState(false);
         }
+
+        public override Gate Clone()
+        {
+            Gate clone_gate = new AlwaysFalseGate();
+
+            return clone_gate;
+        }
     }
 
     class AlwaysTrueGate : OutputOnlyGate
@@ -484,6 +533,13 @@ namespace SimpleLogicGateSim
         public AlwaysTrueGate()
         {
             m_port_list[0].SetState(true);
+        }
+
+        public override Gate Clone()
+        {
+            Gate clone_gate = new AlwaysTrueGate();
+
+            return clone_gate;
         }
     }
 
@@ -500,6 +556,13 @@ namespace SimpleLogicGateSim
 
         public override void RunLogic()
         {
+        }
+
+        public override Gate Clone()
+        {
+            Gate clone_gate = new InputOnlyGate();
+
+            return clone_gate;
         }
     }
 
@@ -534,6 +597,13 @@ namespace SimpleLogicGateSim
             {
                 m_freq = freq;
             }
+        }
+
+        public override Gate Clone()
+        {
+            Gate clone_gate = new ClockGate(m_freq);
+
+            return clone_gate;
         }
     }
 
@@ -587,6 +657,83 @@ namespace SimpleLogicGateSim
             {
                 gate.ClearDetermined();
             }
+        }
+
+        public List<Gate> GetGateList()
+        {
+            return m_gate_list;
+        }
+
+        public override Gate Clone()
+        {
+            Dictionary<Gate, Gate> gate_map = new Dictionary<Gate, Gate>();
+
+            List<Gate> clone_gate_list = new List<Gate>();
+            foreach(Gate gate in m_gate_list)
+            {
+                Gate clone_gate = gate.Clone();
+                clone_gate_list.Add(clone_gate);
+
+                gate_map.Add(gate, clone_gate);
+            }
+
+            List<Port> clone_port_list = new List<Port>();
+            foreach(Port port in m_port_list)
+            {
+                Port clone_port = port.Clone();
+                clone_port_list.Add(clone_port);
+            }
+
+            foreach(Port from_port in m_input_port_list)
+            {
+                int from_port_index = m_input_port_list.IndexOf(from_port);
+                foreach (Port to_port in from_port.GetLinkedPortList())
+                {
+                    Gate to_gate = to_port.GetGate();
+                    if (to_gate == this)
+                    {
+                        int to_port_index = m_port_list.IndexOf(to_port);
+
+                        clone_port_list[from_port_index].LinkTo(clone_port_list[to_port_index]);
+                    }
+                    else
+                    {
+                        int to_gate_index = this.GetGateList().IndexOf(to_gate);
+                        int to_port_index = to_gate.GetInputPortList().IndexOf(to_port);
+
+                        clone_port_list[from_port_index].LinkTo(clone_gate_list[to_gate_index].GetInputPort(to_port_index));
+                    }
+                }
+            }
+
+            foreach (Gate gate in m_gate_list)
+            {
+                int gate_index = m_gate_list.IndexOf(gate);
+
+                foreach(Port from_port in gate.GetOutputPortList())
+                {
+                    int from_port_index = gate.GetOutputPortList().IndexOf(from_port);
+                    foreach (Port to_port in from_port.GetLinkedPortList())
+                    {
+                        Gate to_gate = to_port.GetGate();
+                        if (to_gate == this)
+                        {
+                            int to_port_index = m_port_list.IndexOf(to_port);
+
+                            clone_gate_list[gate_index].GetOutputPort(from_port_index).LinkTo(clone_port_list[to_port_index]);
+                        }
+                        else
+                        {
+                            int to_gate_index = this.GetGateList().IndexOf(to_gate);
+                            int to_port_index = to_gate.GetInputPortList().IndexOf(to_port);
+
+                            clone_gate_list[gate_index].GetOutputPort(from_port_index).LinkTo(clone_gate_list[to_gate_index].GetInputPort(to_port_index));
+                        }
+                    }
+                }
+            }
+
+            return new IC(clone_gate_list, clone_port_list);
         }
     }
 
@@ -648,11 +795,8 @@ namespace SimpleLogicGateSim
                 {
                     gate.RunLogic();
 
-                    int output_port_count = gate.GetOutputPortCount();
-                    for (int index = 0; index < output_port_count; ++index)
+                    foreach(Port port in gate.GetOutputPortList())
                     {
-                        Port port = gate.GetOutputPort(index);
-
                         HashSet<Port> linked_port_list = port.GetLinkedPortList();
                         foreach (Port linked_port in linked_port_list)
                         {
@@ -682,427 +826,32 @@ namespace SimpleLogicGateSim
         }
     }
 
-    class ICFactory
-    {
-        public static IC ReadXML(string xml_string)
-        {
-            IC ic = null;
-            string ic_name = null;
-            List<Gate> gate_list = new List<Gate>();
-            List<Port> port_list = new List<Port>();
-            bool parsed_ok = true;
-
-            using (XmlReader reader = XmlReader.Create(new StringReader(xml_string)))
-            {
-                Dictionary<string, Gate> gate_map = new Dictionary<string, Gate>();
-                Dictionary<string, Port> port_map = new Dictionary<string, Port>();
-
-                while (reader.Read())
-                {
-                    switch(reader.NodeType)
-                    {
-                        case XmlNodeType.Element:
-                            if(reader.Name.Equals("IC", StringComparison.OrdinalIgnoreCase)) {
-                                if (reader.MoveToFirstAttribute())
-                                {
-                                    string attrib_name = reader.Name;
-                                    if(attrib_name.Equals("NAME", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        ic_name = reader.Value;
-                                    }
-                                }
-                            }
-                            else if(reader.Name.Equals("GATE", StringComparison.OrdinalIgnoreCase))
-                            {
-                                string gate_name = null;
-                                string gate_type = null;
-                                string gate_id = null;
-
-                                if (reader.MoveToFirstAttribute())
-                                {
-                                    do
-                                    {
-                                        string attrib_name = reader.Name;
-                                        if (attrib_name.Equals("NAME", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            gate_name = reader.Value;
-                                        }
-                                        else if (attrib_name.Equals("TYPE", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            gate_type = reader.Value;
-                                        }
-                                        else if (attrib_name.Equals("ID", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            gate_id = reader.Value;
-                                        }
-                                    }
-                                    while (reader.MoveToNextAttribute());
-
-                                    if (gate_id == null)
-                                    {
-                                        System.Console.WriteLine(string.Format("Gate Type {0} at {1} has no ID", gate_type, ((IXmlLineInfo)reader).LineNumber));
-                                    }
-                                    else
-                                    {
-                                        Gate gate = GenerateGate(gate_type);
-                                        if (gate == null)
-                                        {
-                                            System.Console.WriteLine(string.Format("Invalid Gate Type {0} at {1}", gate_type, ((IXmlLineInfo)reader).LineNumber));
-                                            parsed_ok = false;
-                                        }
-                                        else
-                                        {
-                                            if (gate_name != null)
-                                            {
-                                                gate.SetName(gate_name);
-                                            }
-
-                                            gate_map.Add(gate_id, gate);
-
-                                            gate_list.Add(gate);
-                                        }
-                                    }
-                                }
-                            }
-                            else if (reader.Name.Equals("PORT", StringComparison.OrdinalIgnoreCase))
-                            {
-                                string port_name = null;
-                                string port_direction = null;
-                                string port_id = null;
-
-                                if (reader.MoveToFirstAttribute())
-                                {
-                                    do
-                                    {
-                                        string attrib_name = reader.Name;
-                                        if (attrib_name.Equals("NAME", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            port_name = reader.Value;
-                                        }
-                                        else if (attrib_name.Equals("TYPE", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            port_direction = reader.Value;
-                                        }
-                                        else if (attrib_name.Equals("ID", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            port_id = reader.Value;
-                                        }
-                                    }
-                                    while (reader.MoveToNextAttribute());
-
-                                    if (port_id == null)
-                                    {
-                                        System.Console.WriteLine(string.Format("Port Type {0} at {1} has no ID", port_direction, ((IXmlLineInfo)reader).LineNumber));
-                                    }
-                                    else
-                                    {
-                                        bool is_port_input = false;
-
-                                        if(ParsePortDirection(port_direction, out is_port_input))
-                                        {
-                                            Port port = new Port(is_port_input);
-
-                                            if (port_name != null)
-                                            {
-                                                port.SetName(port_name);
-                                            }
-
-                                            port_map.Add(port_id, port);
-
-                                            port_list.Add(port);
-                                        }
-                                    }
-                                }
-                            }
-                            else if (reader.Name.Equals("WIRE", StringComparison.OrdinalIgnoreCase))
-                            {
-                                string from_string = null;
-                                string to_string = null;
-
-                                if (reader.MoveToFirstAttribute())
-                                {
-                                    do
-                                    {
-                                        string attrib_name = reader.Name;
-                                        if (attrib_name.Equals("FROM", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            from_string = reader.Value;
-                                        }
-                                        else if (attrib_name.Equals("TO", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            to_string = reader.Value;
-                                        }
-                                    }
-                                    while (reader.MoveToNextAttribute());
-
-                                    if(from_string == null || to_string == null)
-                                    {
-                                        if (from_string == null)
-                                        {
-                                            System.Console.WriteLine(string.Format("WIRE at {0} has no FROM", ((IXmlLineInfo)reader).LineNumber));
-                                            parsed_ok = false;
-                                        }
-                                        if (to_string == null)
-                                        {
-                                            System.Console.WriteLine(string.Format("WIRE at {0} has no TO", ((IXmlLineInfo)reader).LineNumber));
-                                            parsed_ok = false;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        bool from_is_port = false;
-                                        string from_id = null;
-                                        bool port_on_from_gate_is_input = false;
-                                        int port_on_from_gate_index = -1;
-
-                                        bool to_is_port = false;
-                                        string to_id = null;
-                                        bool port_on_to_gate_is_input = false;
-                                        int port_on_to_gate_index = -1;
-
-                                        bool from_parsed = ParseWireConnection(from_string, out from_is_port, out from_id, out port_on_from_gate_is_input, out port_on_from_gate_index);
-                                        bool to_parsed = ParseWireConnection(to_string, out to_is_port, out to_id, out port_on_to_gate_is_input, out port_on_to_gate_index);
-
-                                        if(!from_parsed || !to_parsed)
-                                        {
-                                            if (!from_parsed)
-                                            {
-                                                System.Console.WriteLine(string.Format("WIRE at {0} has invalid FROM", ((IXmlLineInfo)reader).LineNumber));
-                                                parsed_ok = false;
-                                            }
-
-                                            if (!to_parsed)
-                                            {
-                                                System.Console.WriteLine(string.Format("WIRE at {0} has invalid TO", ((IXmlLineInfo)reader).LineNumber));
-                                                parsed_ok = false;
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Port from_port = null;
-                                            Port to_port = null;
-
-                                            if(from_is_port)
-                                            {
-                                                from_port = port_map[from_id];
-                                            }
-                                            else
-                                            {
-                                                Gate from_gate = gate_map[from_id];
-                                                if(from_gate != null)
-                                                {
-                                                    if(port_on_from_gate_is_input)
-                                                    {
-                                                        from_port = from_gate.GetInputPort(port_on_from_gate_index);
-                                                    }
-                                                    else
-                                                    {
-                                                        from_port = from_gate.GetOutputPort(port_on_from_gate_index);
-                                                    }
-                                                }
-                                            }
-
-                                            if (to_is_port)
-                                            {
-                                                to_port = port_map[to_id];
-                                            }
-                                            else
-                                            {
-                                                Gate to_gate = gate_map[to_id];
-                                                if (to_gate != null)
-                                                {
-                                                    if (port_on_to_gate_is_input)
-                                                    {
-                                                        to_port = to_gate.GetInputPort(port_on_to_gate_index);
-                                                    }
-                                                    else
-                                                    {
-                                                        to_port = to_gate.GetOutputPort(port_on_to_gate_index);
-                                                    }
-                                                }
-                                            }
-
-                                            if(from_port == null || to_port == null)
-                                            {
-                                                if(from_port == null)
-                                                {
-                                                    System.Console.WriteLine(string.Format("WIRE at {0} has invalid FROM Port", ((IXmlLineInfo)reader).LineNumber));
-                                                    parsed_ok = false;
-                                                }
-
-                                                if(to_port == null)
-                                                {
-                                                    System.Console.WriteLine(string.Format("WIRE at {0} has invalid TO Port", ((IXmlLineInfo)reader).LineNumber));
-                                                    parsed_ok = false;
-                                                }
-                                            }
-                                            else
-                                            {
-                                                from_port.LinkTo(to_port);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            break;
-                    }
-                }
-            }
-
-            if(parsed_ok)
-            {
-                ic = new IC(gate_list, port_list);
-                if(ic_name != null)
-                {
-                    ic.SetName(ic_name);
-                }
-            }
-
-            return ic;
-        }
-
-        protected static Gate GenerateGate(string type)
-        {
-            Gate gate = null;
-
-            if (type.Equals("AND", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new AndGate();
-            }
-            else if (type.Equals("OR", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new OrGate();
-            }
-            else if (type.Equals("NOT", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new NotGate();
-            }
-            else if (type.Equals("XOR", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new XorGate();
-            }
-            else if (type.Equals("NAND", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new NandGate();
-            }
-            else if (type.Equals("NOR", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new NorGate();
-            }
-            else if (type.Equals("BUFFER", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new BufferGate();
-            }
-            else if (type.Equals("OUTPUT", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new OutputOnlyGate();
-            }
-            else if (type.Equals("TRUE", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new AlwaysTrueGate();
-            }
-            else if (type.Equals("FALSE", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new AlwaysFalseGate();
-            }
-            else if (type.Equals("INPUT", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new InputOnlyGate();
-            }
-            else if (type.Equals("CLOCK", StringComparison.OrdinalIgnoreCase))
-            {
-                gate = new ClockGate();
-            }
-
-            return gate;
-        }
-
-        protected static bool ParsePortDirection(string s, out bool is_input)
-        {
-            bool parsed = false;
-            is_input = false;
-
-            if (s.Equals("IN", StringComparison.OrdinalIgnoreCase))
-            {
-                parsed = true;
-                is_input = true;
-            }
-            else if(s.Equals("INPUT", StringComparison.OrdinalIgnoreCase))
-            {
-                parsed = true;
-                is_input = true;
-            }
-            else if (s.Equals("OUT", StringComparison.OrdinalIgnoreCase))
-            {
-                parsed = true;
-                is_input = false;
-            }
-            else if (s.Equals("OUTPUT", StringComparison.OrdinalIgnoreCase))
-            {
-                parsed = true;
-                is_input = false;
-            }
-
-            return parsed;
-        }
-
-        protected static bool ParseWireConnection(string s, out bool is_port, out string id, out bool port_on_gate_is_input, out int port_on_gate_index)
-        {
-            bool parsed = false;
-            is_port = false;
-            id = null;
-            port_on_gate_is_input = false;
-            port_on_gate_index = -1;
-
-            int first_break_index = -1;
-            int second_break_index = -1;
-
-            first_break_index = s.IndexOf('$');
-            second_break_index = s.IndexOf('#');
-
-            if(first_break_index < 0 && second_break_index < 0)
-            {
-                // Port
-                if(s.Length > 0)
-                {
-                    parsed = true;
-                    is_port = true;
-                    id = s;
-                }
-            }
-            else if(first_break_index >= 0 && second_break_index >= 0)
-            {
-                // Gate
-                id = s.Substring(0, first_break_index);
-                if(id.Length > 0)
-                {
-                    string port_on_gate_direction = s.Substring(first_break_index + 1, second_break_index - first_break_index - 1);
-                    string part_on_gate_index_string = s.Substring(second_break_index + 1);
-
-                    if (ParsePortDirection(port_on_gate_direction, out port_on_gate_is_input))
-                    {
-                        if (Int32.TryParse(part_on_gate_index_string, out port_on_gate_index))
-                        {
-                            parsed = true;
-                            is_port = false;
-                        }
-                    }
-                }
-            }
-
-            return parsed;
-        }
-    }
-
-#if false
     class Circuit
     {
         public List<Gate> m_gate_list;
         private Dictionary<string, Gate> m_gate_map;
+        Dictionary<string, IC> m_ic_map;
+
+        public Circuit(List<Gate> gate_list, Dictionary<string, Gate> gate_map, Dictionary<string, IC> ic_map)
+        {
+            m_gate_list = gate_list;
+            m_gate_map = gate_map;
+            m_ic_map = ic_map;
+        }
 
         public Gate FindGateByID(string id)
         {
             return m_gate_map[id];
+        }
+
+        public List<Gate> GetGateList()
+        {
+            return m_gate_list;
+        }
+
+        public Gate FindICByID(string id)
+        {
+            return m_ic_map[id];
         }
 
         public static Circuit ReadXML(string xml_string)
@@ -1114,15 +863,16 @@ namespace SimpleLogicGateSim
             string ic_id = null;
             string ic_type = null;
 
-            List<Gate> ic_gate_list = new List<Gate>();
-            List<Port> ic_port_list = new List<Port>();
             List<Gate> circuit_gate_list = new List<Gate>();
             bool parsed_ok = true;
 
             Dictionary<string, Gate> circuit_gate_map = new Dictionary<string, Gate>();
-            Dictionary<string, Gate> ic_gate_map = new Dictionary<string, Gate>();
-            Dictionary<string, Port> ic_port_map = new Dictionary<string, Port>();
-            Dictionary<string, IC> ic_map = new Dictionary<string, IC>();
+            Dictionary<string, IC> circuit_ic_map = new Dictionary<string, IC>();
+
+            List<Gate> ic_gate_list = null;
+            List<Port> ic_port_list = null;
+            Dictionary<string, Gate> ic_gate_map = null;
+            Dictionary<string, Port> ic_port_map = null;
 
             using (XmlReader reader = XmlReader.Create(new StringReader(xml_string)))
             {
@@ -1134,10 +884,10 @@ namespace SimpleLogicGateSim
                             if (reader.Name.Equals("IC", StringComparison.OrdinalIgnoreCase))
                             {
                                 in_ic = true;
-                                ic_gate_list.Clear();
-                                ic_port_list.Clear();
-                                ic_gate_map.Clear();
-                                ic_port_map.Clear();
+                                ic_gate_list = new List<Gate>();
+                                ic_port_list = new List<Port>();
+                                ic_gate_map = new Dictionary<string, Gate>();
+                                ic_port_map = new Dictionary<string, Port>();
 
                                 if (reader.MoveToFirstAttribute())
                                 {
@@ -1188,7 +938,17 @@ namespace SimpleLogicGateSim
                                     }
                                     else
                                     {
-                                        Gate gate = GenerateGate(gate_type);
+                                        Gate gate = null;
+
+                                        if(circuit_ic_map.ContainsKey(gate_type))
+                                        {
+                                            gate = circuit_ic_map[gate_type].Clone();
+                                        }
+                                        else
+                                        {
+                                            gate = GenerateGate(gate_type);
+                                        }
+
                                         if (gate == null)
                                         {
                                             System.Console.WriteLine(string.Format("Invalid Gate Type {0} at {1}", gate_type, ((IXmlLineInfo)reader).LineNumber));
@@ -1457,7 +1217,7 @@ namespace SimpleLogicGateSim
                                     ic.SetName(ic_name);
                                 }
 
-                                circuit_gate_list.Add(ic);
+                                circuit_ic_map.Add(ic_id, ic);
                             }
                             break;
                     }
@@ -1466,11 +1226,142 @@ namespace SimpleLogicGateSim
 
             if (parsed_ok)
             {
-                circuit = new Circuit(circuit_gate_list, );
+                circuit = new Circuit(circuit_gate_list, circuit_gate_map, circuit_ic_map);
             }
 
             return circuit;
         }
+
+        protected static Gate GenerateGate(string type)
+        {
+            Gate gate = null;
+
+            if (type.Equals("AND", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new AndGate();
+            }
+            else if (type.Equals("OR", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new OrGate();
+            }
+            else if (type.Equals("NOT", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new NotGate();
+            }
+            else if (type.Equals("XOR", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new XorGate();
+            }
+            else if (type.Equals("NAND", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new NandGate();
+            }
+            else if (type.Equals("NOR", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new NorGate();
+            }
+            else if (type.Equals("BUFFER", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new BufferGate();
+            }
+            else if (type.Equals("OUTPUT", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new OutputOnlyGate();
+            }
+            else if (type.Equals("TRUE", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new AlwaysTrueGate();
+            }
+            else if (type.Equals("FALSE", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new AlwaysFalseGate();
+            }
+            else if (type.Equals("INPUT", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new InputOnlyGate();
+            }
+            else if (type.Equals("CLOCK", StringComparison.OrdinalIgnoreCase))
+            {
+                gate = new ClockGate();
+            }
+
+            return gate;
+        }
+
+        protected static bool ParsePortDirection(string s, out bool is_input)
+        {
+            bool parsed = false;
+            is_input = false;
+
+            if (s.Equals("IN", StringComparison.OrdinalIgnoreCase))
+            {
+                parsed = true;
+                is_input = true;
+            }
+            else if (s.Equals("INPUT", StringComparison.OrdinalIgnoreCase))
+            {
+                parsed = true;
+                is_input = true;
+            }
+            else if (s.Equals("OUT", StringComparison.OrdinalIgnoreCase))
+            {
+                parsed = true;
+                is_input = false;
+            }
+            else if (s.Equals("OUTPUT", StringComparison.OrdinalIgnoreCase))
+            {
+                parsed = true;
+                is_input = false;
+            }
+
+            return parsed;
+        }
+
+        protected static bool ParseWireConnection(string s, out bool is_port, out string id, out bool port_on_gate_is_input, out int port_on_gate_index)
+        {
+            bool parsed = false;
+            is_port = false;
+            id = null;
+            port_on_gate_is_input = false;
+            port_on_gate_index = -1;
+
+            int first_break_index = -1;
+            int second_break_index = -1;
+
+            first_break_index = s.IndexOf('$');
+            second_break_index = s.IndexOf('#');
+
+            if (first_break_index < 0 && second_break_index < 0)
+            {
+                // Port
+                if (s.Length > 0)
+                {
+                    parsed = true;
+                    is_port = true;
+                    id = s;
+                }
+            }
+            else if (first_break_index >= 0 && second_break_index >= 0)
+            {
+                // Gate
+                id = s.Substring(0, first_break_index);
+                if (id.Length > 0)
+                {
+                    string port_on_gate_direction = s.Substring(first_break_index + 1, second_break_index - first_break_index - 1);
+                    string part_on_gate_index_string = s.Substring(second_break_index + 1);
+
+                    if (ParsePortDirection(port_on_gate_direction, out port_on_gate_is_input))
+                    {
+                        if (Int32.TryParse(part_on_gate_index_string, out port_on_gate_index))
+                        {
+                            parsed = true;
+                            is_port = false;
+                        }
+                    }
+                }
+            }
+
+            return parsed;
+        }
     }
-#endif
 }

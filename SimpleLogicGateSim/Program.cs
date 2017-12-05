@@ -219,11 +219,13 @@ namespace SimpleLogicGateSim
             System.Console.WriteLine(input1.GetInputPort(0).GetState());
 #endif
 
-#if true
+#if false
             // string cwd = Directory.GetCurrentDirectory();
             // System.Console.WriteLine(cwd);
             string text = System.IO.File.ReadAllText(@"..\..\..\ic\half_adder.xml");
-            IC ic1 = ICFactory.ReadXML(text);
+            IC ic2 = ICFactory.ReadXML(text);
+
+            IC ic1 = ic2.Clone() as IC;
 
             Gate output1 = new OutputOnlyGate();
             Gate output2 = new OutputOnlyGate();
@@ -241,6 +243,39 @@ namespace SimpleLogicGateSim
             gate_list.Add(output2);
             gate_list.Add(input1);
             gate_list.Add(input2);
+
+            output1.GetOutputPort(0).SetState(false);
+            output2.GetOutputPort(0).SetState(false);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(input1.GetInputPort(0).GetState() + "," + input2.GetInputPort(0).GetState());
+
+            output1.GetOutputPort(0).SetState(true);
+            output2.GetOutputPort(0).SetState(false);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(input1.GetInputPort(0).GetState() + "," + input2.GetInputPort(0).GetState());
+
+            output1.GetOutputPort(0).SetState(false);
+            output2.GetOutputPort(0).SetState(true);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(input1.GetInputPort(0).GetState() + "," + input2.GetInputPort(0).GetState());
+
+            output1.GetOutputPort(0).SetState(true);
+            output2.GetOutputPort(0).SetState(true);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(input1.GetInputPort(0).GetState() + "," + input2.GetInputPort(0).GetState());
+#endif
+
+#if true
+            // string cwd = Directory.GetCurrentDirectory();
+            // System.Console.WriteLine(cwd);
+            string text = System.IO.File.ReadAllText(@"..\..\..\ic\circuit2.xml");
+            Circuit circuit1 = Circuit.ReadXML(text);
+
+            List<Gate> gate_list = circuit1.GetGateList();
+            Gate output1 = circuit1.FindGateByID("out1");
+            Gate output2 = circuit1.FindGateByID("out2");
+            Gate input1 = circuit1.FindGateByID("in1");
+            Gate input2 = circuit1.FindGateByID("in2");
 
             output1.GetOutputPort(0).SetState(false);
             output2.GetOutputPort(0).SetState(false);

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<IC name="Half Adder">
+<IC id="ic1" name="Half Adder">
     <GATE ID="xor1" TYPE="XOR" />
     <GATE ID="and1" TYPE="AND" />
     <PORT ID="portX" TYPE="IN" />
