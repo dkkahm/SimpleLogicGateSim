@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CIRCUIT>
+    <IC id="HA" name="Half Adder">
+        <GATE ID="xor1" TYPE="XOR" />
+        <GATE ID="and1" TYPE="AND" />
+        <PORT ID="portX" TYPE="IN" />
+        <PORT ID="portY" TYPE="IN" />
+        <PORT ID="portS" TYPE="OUT" />
+        <PORT ID="portC" TYPE="OUT" />
+        <WIRE FROM="portX" TO="xor1$in0" />
+        <WIRE FROM="portY" TO="xor1$in1" />
+        <WIRE FROM="portX" TO="and1$in0" />
+        <WIRE FROM="portY" TO="and1$in1" />
+        <WIRE FROM="xor1$out0" TO="portS" />
+        <WIRE FROM="and1$out0" TO="portC" />
+    </IC>
+
+    <GATE id="A" type="OUTPUT" />
+    <GATE id="B" type="OUTPUT" />
+    <GATE id="Cin" type="OUTPUT" />
+    <GATE id="ha1" type="HA" />
+    <GATE id="ha2" type="HA" />
+    <GATE id="or1" type="OR" />
+    <GATE id="S" type="INPUT" />
+    <GATE id="Cout" type="INPUT" />
+    <WIRE FROM="A$out0" TO="ha1$portX" />
+    <WIRE FROM="B$out0" TO="ha1$portY" />
+    <WIRE FROM="Cin$out0" TO="ha2$portY" />
+    <WIRE FROM="ha1$portS" TO="ha2$portX" />
+    <WIRE FROM="ha1$portC" TO="or1$in1" />
+    <WIRE FROM="ha2$portS" TO="S$in0" />
+    <WIRE FROM="ha2$portC" TO="or1$in0" />
+    <WIRE FROM="or1$out0" TO="Cout$in0" />
+
+</CIRCUIT>

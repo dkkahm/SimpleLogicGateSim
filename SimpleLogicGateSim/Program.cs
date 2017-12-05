@@ -265,7 +265,7 @@ namespace SimpleLogicGateSim
             System.Console.WriteLine(input1.GetInputPort(0).GetState() + "," + input2.GetInputPort(0).GetState());
 #endif
 
-#if true
+#if false
             // string cwd = Directory.GetCurrentDirectory();
             // System.Console.WriteLine(cwd);
             // string text = System.IO.File.ReadAllText(@"..\..\..\ic\circuit2.xml");
@@ -297,6 +297,70 @@ namespace SimpleLogicGateSim
             output2.GetOutputPort(0).SetState(true);
             LogicSimulator.RunTick(gate_list);
             System.Console.WriteLine(input1.GetInputPort(0).GetState() + "," + input2.GetInputPort(0).GetState());
+#endif
+
+#if true
+            // string cwd = Directory.GetCurrentDirectory();
+            // System.Console.WriteLine(cwd);
+            // string text = System.IO.File.ReadAllText(@"..\..\..\ic\circuit2.xml");
+            string text = System.IO.File.ReadAllText(@"..\..\..\ic\circuit4.xml");
+            Circuit circuit1 = Circuit.ReadXML(text);
+
+            List<Gate> gate_list = circuit1.GetGateList();
+            Gate A = circuit1.FindGateByID("A");
+            Gate B = circuit1.FindGateByID("B");
+            Gate Cin = circuit1.FindGateByID("Cin");
+            Gate S = circuit1.FindGateByID("S");
+            Gate Cout = circuit1.FindGateByID("Cout");
+
+            A.GetOutputPort(0).SetState(false);
+            B.GetOutputPort(0).SetState(false);
+            Cin.GetOutputPort(0).SetState(false);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(S.GetInputPort(0).GetState() + "," + Cout.GetInputPort(0).GetState());
+
+            A.GetOutputPort(0).SetState(false);
+            B.GetOutputPort(0).SetState(false);
+            Cin.GetOutputPort(0).SetState(true);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(S.GetInputPort(0).GetState() + "," + Cout.GetInputPort(0).GetState());
+
+            A.GetOutputPort(0).SetState(false);
+            B.GetOutputPort(0).SetState(true);
+            Cin.GetOutputPort(0).SetState(false);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(S.GetInputPort(0).GetState() + "," + Cout.GetInputPort(0).GetState());
+
+            A.GetOutputPort(0).SetState(false);
+            B.GetOutputPort(0).SetState(true);
+            Cin.GetOutputPort(0).SetState(true);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(S.GetInputPort(0).GetState() + "," + Cout.GetInputPort(0).GetState());
+
+
+            A.GetOutputPort(0).SetState(true);
+            B.GetOutputPort(0).SetState(false);
+            Cin.GetOutputPort(0).SetState(false);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(S.GetInputPort(0).GetState() + "," + Cout.GetInputPort(0).GetState());
+
+            A.GetOutputPort(0).SetState(true);
+            B.GetOutputPort(0).SetState(false);
+            Cin.GetOutputPort(0).SetState(true);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(S.GetInputPort(0).GetState() + "," + Cout.GetInputPort(0).GetState());
+
+            A.GetOutputPort(0).SetState(true);
+            B.GetOutputPort(0).SetState(true);
+            Cin.GetOutputPort(0).SetState(false);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(S.GetInputPort(0).GetState() + "," + Cout.GetInputPort(0).GetState());
+
+            A.GetOutputPort(0).SetState(true);
+            B.GetOutputPort(0).SetState(true);
+            Cin.GetOutputPort(0).SetState(true);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(S.GetInputPort(0).GetState() + "," + Cout.GetInputPort(0).GetState());
 #endif
         }
     }
