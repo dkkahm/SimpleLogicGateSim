@@ -670,13 +670,13 @@ namespace SimpleLogicGateSim
             HashSet<Gate> undetermined_list = new HashSet<Gate>(m_gate_list);
             LogicSimulator.RunTickCore(undetermined_list);
 
-            foreach (Port port in m_output_port_list)
-            {
-                foreach (Port linked_port in port.GetLinkedPortList())
-                {
-                    linked_port.SetState(port.GetState());
-                }
-            }
+            //foreach (Port port in m_output_port_list)
+            //{
+            //    foreach (Port linked_port in port.GetLinkedPortList())
+            //    {
+            //        linked_port.SetState(port.GetState());
+            //    }
+            //}
         }
 
         public override void ClearDetermined()
