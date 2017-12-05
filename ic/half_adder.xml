@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IC name="Half Adder">
+    <GATE ID="xor1" TYPE="XOR" />
+    <GATE ID="and1" TYPE="AND" />
+    <PORT ID="portX" TYPE="IN" />
+    <PORT ID="portY" TYPE="IN" />
+    <PORT ID="portS" TYPE="OUT" />
+    <PORT ID="portC" TYPE="OUT" />
+    <WIRE FROM="portX" TO="xor1$IN#0" />
+    <WIRE FROM="portY" TO="xor1$IN#1" />
+    <WIRE FROM="portX" TO="and1$IN#0" />
+    <WIRE FROM="portY" TO="and1$IN#1" />
+    <WIRE FROM="xor1$OUT#0" TO="portS" />
+    <WIRE FROM="and1$OUT#0" TO="portC" />
+</IC>

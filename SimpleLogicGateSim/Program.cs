@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace SimpleLogicGateSim
 {
@@ -114,7 +115,7 @@ namespace SimpleLogicGateSim
             System.Console.WriteLine(input.GetInputPort(0).GetState());
 #endif
 
-#if true
+#if false
             // Gate lg1 = new AndGate();
             // Gate lg2 = new AndGate();
 
@@ -216,6 +217,50 @@ namespace SimpleLogicGateSim
             output3.GetOutputPort(0).SetState(true);
             LogicSimulator.RunTick(gate_list);
             System.Console.WriteLine(input1.GetInputPort(0).GetState());
+#endif
+
+#if true
+            // string cwd = Directory.GetCurrentDirectory();
+            // System.Console.WriteLine(cwd);
+            string text = System.IO.File.ReadAllText(@"..\..\..\ic\half_adder.xml");
+            IC ic1 = ICFactory.ReadXML(text);
+
+            Gate output1 = new OutputOnlyGate();
+            Gate output2 = new OutputOnlyGate();
+            Gate input1 = new InputOnlyGate();
+            Gate input2 = new InputOnlyGate();
+
+            output1.GetOutputPort(0).LinkTo(ic1.GetInputPort(0));
+            output2.GetOutputPort(0).LinkTo(ic1.GetInputPort(1));
+            ic1.GetOutputPort(0).LinkTo(input1.GetInputPort(0));
+            ic1.GetOutputPort(1).LinkTo(input2.GetInputPort(0));
+
+            List<Gate> gate_list = new List<Gate>();
+            gate_list.Add(ic1);
+            gate_list.Add(output1);
+            gate_list.Add(output2);
+            gate_list.Add(input1);
+            gate_list.Add(input2);
+
+            output1.GetOutputPort(0).SetState(false);
+            output2.GetOutputPort(0).SetState(false);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(input1.GetInputPort(0).GetState() + "," + input2.GetInputPort(0).GetState());
+
+            output1.GetOutputPort(0).SetState(true);
+            output2.GetOutputPort(0).SetState(false);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(input1.GetInputPort(0).GetState() + "," + input2.GetInputPort(0).GetState());
+
+            output1.GetOutputPort(0).SetState(false);
+            output2.GetOutputPort(0).SetState(true);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(input1.GetInputPort(0).GetState() + "," + input2.GetInputPort(0).GetState());
+
+            output1.GetOutputPort(0).SetState(true);
+            output2.GetOutputPort(0).SetState(true);
+            LogicSimulator.RunTick(gate_list);
+            System.Console.WriteLine(input1.GetInputPort(0).GetState() + "," + input2.GetInputPort(0).GetState());
 #endif
         }
     }
